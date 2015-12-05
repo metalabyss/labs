@@ -6,12 +6,12 @@ int nextPermutation(unsigned char *string, int length)
 {
 	int k = length - 2;
 
-	while (string[k] >= string[k + 1]) k--; //находим ближайший к концу строки эл-т, который меньше следующего
+	while (string[k] >= string[k + 1]) k--; //РЅР°С…РѕРґРёРј Р±Р»РёР¶Р°Р№С€РёР№ Рє РєРѕРЅС†Сѓ СЃС‚СЂРѕРєРё СЌР»-С‚, РєРѕС‚РѕСЂС‹Р№ РјРµРЅСЊС€Рµ СЃР»РµРґСѓСЋС‰РµРіРѕ
 
-	if (k < 0) return 0; //если таковой не нашёлся, значит это последняя перестановка
+	if (k < 0) return 0; //РµСЃР»Рё С‚Р°РєРѕРІРѕР№ РЅРµ РЅР°С€С‘Р»СЃСЏ, Р·РЅР°С‡РёС‚ СЌС‚Рѕ РїРѕСЃР»РµРґРЅСЏСЏ РїРµСЂРµСЃС‚Р°РЅРѕРІРєР°
 
 	int l = length - 1;
-	while (string[k] >= string[l]) l--; //находим наибольший эл-т, который находится правее k
+	while (string[k] >= string[l]) l--; //РЅР°С…РѕРґРёРј РЅР°РёР±РѕР»СЊС€РёР№ СЌР»-С‚, РєРѕС‚РѕСЂС‹Р№ РЅР°С…РѕРґРёС‚СЃСЏ РїСЂР°РІРµРµ k
 
 	if (k >= l) return 0;
 
@@ -19,7 +19,7 @@ int nextPermutation(unsigned char *string, int length)
 	string[k] = string[l];
 	string[l] = tmp;
 
-	for (int i = k + 1; i <= (k + length) / 2; i++) //разворачиваем то, что справа от k
+	for (int i = k + 1; i <= (k + length) / 2; i++) //СЂР°Р·РІРѕСЂР°С‡РёРІР°РµРј С‚Рѕ, С‡С‚Рѕ СЃРїСЂР°РІР° РѕС‚ k
 	{
 		tmp = string[i];
 		string[i] = string[length - i + k];

@@ -18,4 +18,6 @@ void main()
 	{
 		printf_s("%d ", arr[i]);
 	}
+
+	free(arr);
 }
