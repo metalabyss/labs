@@ -162,8 +162,8 @@ char *calculate(token *expression, int expressionLength)
 		{
 			if (rpnExp[i].symbol == '/' && stack[stackEnd] == 0) return "division by zero";
 
-			double result = calculateOperator(rpnExp[i].symbol, stack[stackEnd--], stack[stackEnd--]);
-			stack[++stackEnd] = result;
+			double result = calculateOperator(rpnExp[i].symbol, stack[stackEnd - 1], stack[stackEnd]);
+			stack[--stackEnd] = result;
 		}
 	}
 	
