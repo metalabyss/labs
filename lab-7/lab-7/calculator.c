@@ -1,4 +1,7 @@
-﻿#include <memory.h>
+﻿//#include <memory.h>
+#include <malloc.h>
+#include <stdio.h>
+#include <string.h>
 #include "calculator.h"
 
 int getNumber(char c)
@@ -25,9 +28,26 @@ int getOperatorPriority(char c)
 	}
 }
 
-token_t *parse(unsigned char *string, int *tokensCount)
+double calculateOperator(char op, double a, double b)
 {
-	token_t *result = malloc(sizeof(token_t) * strlen(string));
+	switch (op)
+	{
+	case '*':
+		return a * b;
+	case '/':
+		return a / b;
+	case '+':
+		return a + b;
+	case '-':
+		return a - b;
+	default:
+		return 0;
+	}
+}
+
+token *parse(unsigned char *string, int *tokensCount)
+{
+	token *result = malloc(sizeof(token) * strlen(string));
 	*tokensCount = 0;
 
 	int i;
@@ -60,16 +80,16 @@ token_t *parse(unsigned char *string, int *tokensCount)
 	return result;
 }
 
-token_t *convertToRPN(token_t *expression, int expressionLength)
+token *convertToRPN(token *expression, int *expressionLength)
 {
-	token_t *result = malloc(sizeof(token_t)* expressionLength);
+	token *result = malloc(sizeof(token) * (*expressionLength));
 	int resultLength = 0;
 
-	token_t *stack = malloc(sizeof(token_t)* expressionLength);
+	token *stack = malloc(sizeof(token) * (*expressionLength));
 	int stackEnd = -1; //стек пуст!
 
 	int i;
-	for (i = 0; i < expressionLength; i++)
+	for (i = 0; i < (*expressionLength); i++)
 	{
 		//если встретилось число - кладём в массив
 		if (expression[i].type == NUMBER) { 
@@ -78,6 +98,7 @@ token_t *convertToRPN(token_t *expression, int expressionLength)
 		//если встретилась откр. скобка - помещаем её в стек.
 		else if (expression[i].type == OPERATOR && expression[i].symbol == '(')
 		{
+			if (i < (*expressionLength) - 1 && expression[i + 1].type == OPERATOR && expression[i + 1].symbol == ')') return NULL;
 			stack[++stackEnd] = expression[i];
 		}
 		else if (expression[i].type == OPERATOR && expression[i].symbol == ')')
@@ -110,21 +131,52 @@ token_t *convertToRPN(token_t *expression, int expressionLength)
 		}
 	}
 
+	//освобождаем стек
 	while (stackEnd >= 0)
 	{
 		if (stack[stackEnd].type == OPERATOR && stack[stackEnd].symbol == '(') return NULL; //неправильно расставлены скобки!
 		result[resultLength++] = stack[stackEnd--];
 	}
 
+	*expressionLength = resultLength;
 	free(stack);
 	return result;
 }
 
-char *calculate(token_t *expression, int expressionLength)
+char *calculate(token *expression, int expressionLength)
 {
-	token_t *rpn = convertToRPN(expression, expressionLength);
-	if (rpn == NULL) return "syntax error";
+	token *rpnExp = convertToRPN(expression, &expressionLength);
+	if (rpnExp == NULL) return "syntax error";
 
+	double *stack = malloc(sizeof(double) * expressionLength);
+	int stackEnd = -1;
 
+	int i;
+	for (i = 0; i < expressionLength; i++)
+	{
+		if (rpnExp[i].type == NUMBER)
+		{
+			stack[++stackEnd] = rpnExp[i].number;
+		}
+		else
+		{
+			if (rpnExp[i].symbol == '/' && stack[stackEnd] == 0) return "division by zero";
+
+			double result = calculateOperator(rpnExp[i].symbol, stack[stackEnd--], stack[stackEnd--]);
+			stack[++stackEnd] = result;
+		}
+	}
 	
+	if (stackEnd != 0) //если после вычислений в стеке > 1 элемента
+	{
+		free(stack);
+		return "syntax error";
+	}
+	else
+	{
+		char *result = malloc(sizeof(char) * 32);
+		sprintf_s(result, 32, "%lf", stack[0]);
+		free(stack);
+		return result;
+	}
 }
