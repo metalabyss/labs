@@ -1,5 +1,4 @@
-﻿//#include <memory.h>
-#include <malloc.h>
+﻿#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 #include "calculator.h"
@@ -160,6 +159,7 @@ char *calculate(token *expression, int expressionLength)
 		}
 		else
 		{
+			if (stackEnd < 1) return "syntax error";
 			if (rpnExp[i].symbol == '/' && stack[stackEnd] == 0) return "division by zero";
 
 			double result = calculateOperator(rpnExp[i].symbol, stack[stackEnd - 1], stack[stackEnd]);

@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 #include <malloc.h>
-#include"token.h"
-#include"calculator.h"
+#include "token.h"
+#include "calculator.h"
 
 void main()
 {
