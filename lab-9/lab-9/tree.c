@@ -4,19 +4,26 @@
 
 TreeNode *buildTree(TreeNode *root, int value)
 {
-	if (!root) {
+	if (!root)
+	{
 		root = malloc(sizeof(TreeNode));
 		root->value = value;
 		root->left = NULL;
 		root->right = NULL;
 		root->height = 1;
+
+		return root;
 	}
 	else if (value < root->value)
+	{
 		root->left = buildTree(root->left, value);
+		return rebalance(root);
+	}
 	else
+	{
 		root->right = buildTree(root->right, value);
-
-	return rebalance(root);
+		return rebalance(root);
+	}
 }
 
 TreeNode *rebalance(TreeNode *node)
@@ -25,23 +32,24 @@ TreeNode *rebalance(TreeNode *node)
 
 	int balance = getBalance(node);
 	int subBalance;
-	if (balance == -2) //���� ����� ��������� ������
-	{
-		subBalance = getBalance(node->left);
-		if (subBalance < 0)
-		{
-			rotateLeft(node->left);
-		}
-		return rotateRight(node);
-	}
-	else if (balance == 2)
+	if (balance == 2) //если правое поддерево выше
 	{
 		subBalance = getBalance(node->right);
-		if (subBalance > 0)
+		if (subBalance < 0) //и если его левое поддерево выше
 		{
-			rotateRight(node->right);
+			//то сначала дополнительно делаем малое правое вращение (в сумме это б.л. вращение)
+			node->right = rotateRight(node->right);
 		}
 		return rotateLeft(node);
+	}
+	else if (balance == -2) //если левое поддерево выше
+	{
+		subBalance = getBalance(node->left);
+		if (subBalance > 0)
+		{
+			node->left = rotateLeft(node->left);
+		}
+		return rotateRight(node);
 	}
 	else
 	{
@@ -99,7 +107,8 @@ TreeNode *rotateLeft(TreeNode *a)
 
 void deleteTree(TreeNode *root)
 {
-	if (root) {
+	if (root)
+	{
 		deleteTree((root)->left);
 		deleteTree((root)->right);
 		free(root);

@@ -1,24 +1,25 @@
 #include<stdio.h>
 #include"tree.h"
 
-//АВЛ-дерево
-//TODO: debug
-
 void main()
 {
-	int countOfNodes;
-	scanf_s("%d", &countOfNodes);
+	int count;
+	scanf_s("%d", &count);
 
-	if (countOfNodes)
+	if (count)
 	{
 		int value;
 		TreeNode *root = NULL;
-		for (int i = 1; i < countOfNodes; i++)
+
+		while (count)
 		{
-			scanf_s("%d ", &value);
+			scanf_s("%d", &value);
 			root = buildTree(root, value);
+			count--;
 		}
 		printf("%d", root->height);
+
+		deleteTree(root);
 	}
 	else
 	{
