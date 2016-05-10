@@ -16,7 +16,7 @@ struct _huffmanTree
     HuffmanTreeNode* left;
 };
 
-int _nodeComparator(void* a, void* b)
+int _nodeComparator(const void* a, const void* b)
 {
     HuffmanTreeNode* nodeAPtr = *((HuffmanTreeNode**)a);
     HuffmanTreeNode* nodeBPtr = *((HuffmanTreeNode**)b);

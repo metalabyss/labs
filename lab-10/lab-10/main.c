@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "tree.h"
 #include "code.h"
 
@@ -11,12 +12,16 @@ void compress(FILE* input, FILE* output)
     int ch = EOF;
     int* table = (int*)calloc(256, sizeof(int));
 
-    FILE *tempFile = fopen("tmp.txt", "wb");
+    FILE *tempFile = fopen("tmp2.txt", "wb");
+    FILE *inputsize = fopen("insize.txt", "wb");
+    int insize = 0;
     while (EOF != (ch = fgetc(input)))
     {
         table[ch] += 1;
+        insize++;
         fputc(ch, tempFile);
     }
+    fputc(insize, inputsize);
     fclose(tempFile);
 
     HuffmanTree* tree = makeTree(table, 256);
@@ -24,7 +29,7 @@ void compress(FILE* input, FILE* output)
     free(table);
     destroyTree(tree);
 
-    tempFile = fopen("tmp.txt", "r");
+    tempFile = fopen("tmp2.txt", "rb");
     encodeHuffmanCodes(codes, output);
     int chSize = 0; //размер chToWrite в битах
     int chToWrite = 0; //символ, который будет записан, когда он будет готов
@@ -122,14 +127,15 @@ void decompress(FILE* input, FILE* output)
 
 int main()
 {
-    unsigned char mode;
-    FILE* input = fopen("in.txt", "rb");
+    //char mode_string[10] = { 0 };
+    char mode = 'c';
+    FILE* input = fopen("tmp.txt", "rb");
     FILE* output = fopen("out.txt", "wb");
 
     if (!input) printf("input file doesn't exist");
 
-    fscanf(input, "%c\n", &mode);
-
+    //fgets(mode_string, 10, input);
+    
     if (mode == 'c')
     {
         compress(input, output);
@@ -142,6 +148,7 @@ int main()
     {
         printf("wrong option");
     }
+
     fclose(input);
     fclose(output);
     return 0;
