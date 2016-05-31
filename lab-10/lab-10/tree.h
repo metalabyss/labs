@@ -12,4 +12,7 @@ void getCodes(HuffmanTree*, HuffmanCode*, int);
 void destroyTree(HuffmanTree*);
 int getSymbolByCode(HuffmanTree*, int, int);
 
+void encodeTree(HuffmanTree*, FILE*);
+HuffmanTree* decodeTree(FILE*);
+
 #endif

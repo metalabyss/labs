@@ -14,6 +14,7 @@ struct _huffmanTree
 {
     HuffmanTreeNode* right;
     HuffmanTreeNode* left;
+    long leafCount;
 };
 
 int _nodeComparator(const void* a, const void* b)
@@ -97,6 +98,7 @@ HuffmanTree* makeTreeFromCodes(HuffmanCode* codes)
     HuffmanTree* tree = (HuffmanTree*)calloc(1, sizeof(HuffmanTree));
     for (int i = 0; i < 256; ++i) {
         if (!codes[i].length) continue;
+        tree->leafCount += 1;
         if (codes[i].code & (1 << (codes[i].length - 1)))
         {
             tree->right = _makeTreeNodeFromCode(tree->right, i, codes[i].code, codes[i].length - 1);
@@ -113,12 +115,14 @@ HuffmanTree* makeTreeFromCodes(HuffmanCode* codes)
 HuffmanTree* makeTree(int* symbolTable, int size)
 {
     HuffmanTree* tree = (HuffmanTree*)malloc(sizeof(HuffmanTree));
+    tree->leafCount = 0;
     HuffmanTreeNode** symbolNodes = (HuffmanTreeNode**)calloc(size, sizeof(HuffmanTreeNode*)); //array for sorting
 
     for (int i = 0; i < size; i++)
     {
         if (!symbolTable[i]) continue; //no such symbol in input
 
+        tree->leafCount += 1;
         HuffmanTreeNode* newNode = (HuffmanTreeNode*)calloc(1, sizeof(HuffmanTreeNode));
         newNode->symbol = i;
         newNode->priority = symbolTable[i];
@@ -219,4 +223,101 @@ void destroyTree(HuffmanTree* tree)
     _destroyNode(tree->left);
     _destroyNode(tree->right);
     free(tree);
+}
+
+typedef struct _prepared_symbol {
+    int symbol;
+    int symbol_size;
+} PreparedSymbol;
+
+void _encodeTreeNode(HuffmanTreeNode* node, FILE* output, PreparedSymbol* sym)
+{
+    if (!node) {
+        return;
+    }
+    int isLeaf = (node->symbol != -1);
+    sym->symbol_size += 1;
+    sym->symbol <<= 1;
+    sym->symbol |= isLeaf;
+    if (sym->symbol_size == 8) {
+        fputc(sym->symbol, output);
+        sym->symbol = 0;
+        sym->symbol_size = 0;
+    }
+    if (isLeaf) {
+        int offset = 8 - sym->symbol_size;
+        sym->symbol <<= offset;
+        sym->symbol |= (node->symbol >> sym->symbol_size);
+        fputc(sym->symbol, output);
+        int part = 0;
+        for (int i = 0; i < sym->symbol_size; ++i) {
+            part <<= 1;
+            part |= 1;
+        }
+        sym->symbol = (node->symbol & part);
+        return;
+    }
+    _encodeTreeNode(node->left, output, sym);
+    _encodeTreeNode(node->right, output, sym);
+}
+
+void encodeTree(HuffmanTree* tree, FILE* output)
+{
+    PreparedSymbol sym;
+    fputc((tree->leafCount >> 8), output);
+    fputc((tree->leafCount & 0xFF), output);
+    if (!tree->leafCount) {
+        return;
+    }
+    sym.symbol = 0;
+    sym.symbol_size = 0;
+    _encodeTreeNode(tree->left, output, &sym);
+    _encodeTreeNode(tree->right, output, &sym);
+    if (sym.symbol_size != 0) {
+        fputc(sym.symbol << (8 - sym.symbol_size), output);
+    }
+}
+
+HuffmanTreeNode* _decodeTreeDepth(FILE* input, PreparedSymbol* sym)
+{
+    HuffmanTreeNode* node = (HuffmanTreeNode*)calloc(1, sizeof(HuffmanTreeNode));
+    node->symbol = -1;
+    if (sym->symbol_size == 0) {
+        sym->symbol = fgetc(input);
+        sym->symbol_size = 8;
+    }
+    sym->symbol_size -= 1;
+    if ((sym->symbol >> sym->symbol_size) & 1)
+    {
+        int character = sym->symbol << (8 - sym->symbol_size);
+        character &= 0xFF;
+        sym->symbol = fgetc(input);
+        character |= (sym->symbol >> sym->symbol_size);
+        character &= 0xFF;
+        node->symbol = character;
+    }
+    else
+    {
+        node->left = _decodeTreeDepth(input, sym);
+        node->right = _decodeTreeDepth(input, sym);
+    }
+    return node;
+}
+
+HuffmanTree* decodeTree(FILE* input)
+{
+    HuffmanTree* tree = (HuffmanTree*)calloc(1, sizeof(HuffmanTree));
+    tree->leafCount = (fgetc(input) << 8);
+    tree->leafCount |= fgetc(input);
+    if (!tree->leafCount) {
+        return tree;
+    }
+    PreparedSymbol sym;
+    sym.symbol = fgetc(input);
+    sym.symbol_size = 8;
+    tree->left = _decodeTreeDepth(input, &sym);
+    if (tree->leafCount >= 2) {
+        tree->right = _decodeTreeDepth(input, &sym);
+    }
+    return tree;
 }

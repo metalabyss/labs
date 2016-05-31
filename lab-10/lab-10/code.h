@@ -6,7 +6,7 @@
 
 typedef struct _code
 {
-    int code;
+    long long code;
     int length;
 } HuffmanCode;
 

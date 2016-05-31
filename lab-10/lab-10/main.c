@@ -12,8 +12,9 @@ void compress(FILE* input, FILE* output)
     int ch = EOF;
     int* table = (int*)calloc(256, sizeof(int));
 
-    FILE *tempFile = fopen("tmp2.txt", "wb");
-    FILE *inputsize = fopen("insize.txt", "wb");
+    FILE *tempFile = fopen("tmp.txt", "wb");
+    //FILE *inputsize = fopen("insize.txt", "wb");
+    //FILE *tablelog = fopen("table.txt", "wb");
     int insize = 0;
     while (EOF != (ch = fgetc(input)))
     {
@@ -21,33 +22,42 @@ void compress(FILE* input, FILE* output)
         insize++;
         fputc(ch, tempFile);
     }
-    fputc(insize, inputsize);
     fclose(tempFile);
 
     HuffmanTree* tree = makeTree(table, 256);
     getCodes(tree, codes, 256);
     free(table);
-    destroyTree(tree);
 
-    tempFile = fopen("tmp2.txt", "rb");
-    encodeHuffmanCodes(codes, output);
-    int chSize = 0; //размер chToWrite в битах
+    tempFile = fopen("tmp.txt", "rb");
+    encodeTree(tree, output);
+
     int chToWrite = 0; //символ, который будет записан, когда он будет готов
+    int chSize = 0; //размер chToWrite в битах
     while (EOF != (ch = fgetc(tempFile)))
     {
         HuffmanCode* chCode = codes + ch; //смещаемся по массиву на код ch
         int newChSize = chSize + chCode->length; //вычисляем новый размер символа для записи
         int offset = 0;
+        int skipBytes = 0;
 
-        if (newChSize > 8) offset = newChSize % 8;
+        if (newChSize > 8) {
+            offset = newChSize % 8;
+            skipBytes = newChSize / 8;
+        }
 
-        chSize += chCode->length - offset;
-        chToWrite <<= chCode->length - offset;
-        chToWrite |= chCode->code >> offset;
+        chSize += chCode->length - offset - (skipBytes ? skipBytes - 1 : 0) * 8;
+        chToWrite <<= chCode->length - offset - (skipBytes ? skipBytes - 1 : 0) * 8;
+        chToWrite |= chCode->code >> (offset + (skipBytes ? skipBytes - 1 : 0) * 8);
 
         if (chSize == 8) //если символ готов, записываем его
         {
             fputc(chToWrite, output);
+            if (skipBytes) {
+                for (int i = 0; i < skipBytes - 1; ++i) {
+                    int code = (int)(chCode->code >> (i * 8 + offset));
+                    fputc(code, output);
+                }
+            }
             chSize = offset;
 
             //запись оставшегося кусочка
@@ -69,14 +79,13 @@ void compress(FILE* input, FILE* output)
         fputc(8, output);
     }
     fclose(tempFile);
+    destroyTree(tree);
     free(codes);
 }
 
 void decompress(FILE* input, FILE* output)
 {
-    HuffmanCode* codes = (HuffmanCode*)calloc(256, sizeof(HuffmanCode));
-    decodeHuffmanCodes(codes, input);
-    HuffmanTree* tree = makeTreeFromCodes(codes);
+    HuffmanTree* tree = decodeTree(input);
     int ch1 = fgetc(input); //текущий байт
     int ch2 = fgetc(input); //кол-во значащих бит в ch1, если ch2 - последний
     int ch3 = fgetc(input); //на случай, если ch2 - последний
@@ -122,25 +131,23 @@ void decompress(FILE* input, FILE* output)
         } 
     }
     destroyTree(tree);
-    free(codes);
 }
 
 int main()
 {
-    //char mode_string[10] = { 0 };
-    char mode = 'c';
-    FILE* input = fopen("tmp.txt", "rb");
+    char mode_string[10] = { 0 };
+    FILE* input = fopen("in.txt", "rb");
     FILE* output = fopen("out.txt", "wb");
 
     if (!input) printf("input file doesn't exist");
 
-    //fgets(mode_string, 10, input);
+    fgets(mode_string, 10, input);
     
-    if (mode == 'c')
+    if (mode_string[0] == 'c')
     {
         compress(input, output);
     }
-    else if (mode == 'd')
+    else if (mode_string[0] == 'd')
     {
         decompress(input, output);
     }
