@@ -53,8 +53,8 @@ void compress(FILE* input, FILE* output)
         {
             fputc(chToWrite, output);
             if (skipBytes) {
-                for (int i = 0; i < skipBytes - 1; ++i) {
-                    int code = (int)(chCode->code >> (i * 8 + offset));
+                for (int i = skipBytes - 2; i >= 0; --i) {
+                    int code = (int)(chCode->code >> (i * 8 + offset)) & 0xFF;
                     fputc(code, output);
                 }
             }
@@ -135,7 +135,7 @@ void decompress(FILE* input, FILE* output)
 
 int main()
 {
-    char mode_string[10] = { 0 };
+    char mode_string[10] = { 'c' };
     FILE* input = fopen("in.txt", "rb");
     FILE* output = fopen("out.txt", "wb");
 
