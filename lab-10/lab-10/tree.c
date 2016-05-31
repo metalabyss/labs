@@ -249,11 +249,7 @@ void _encodeTreeNode(HuffmanTreeNode* node, FILE* output, PreparedSymbol* sym)
         sym->symbol <<= offset;
         sym->symbol |= (node->symbol >> sym->symbol_size);
         fputc(sym->symbol, output);
-        int part = 0;
-        for (int i = 0; i < sym->symbol_size; ++i) {
-            part <<= 1;
-            part |= 1;
-        }
+        int part = 0xFF >> (8 - sym->symbol_size);
         sym->symbol = (node->symbol & part);
         return;
     }

@@ -12,28 +12,23 @@ void compress(FILE* input, FILE* output)
     int ch = EOF;
     int* table = (int*)calloc(256, sizeof(int));
 
-    FILE *tempFile = fopen("tmp.txt", "wb");
-    //FILE *inputsize = fopen("insize.txt", "wb");
-    //FILE *tablelog = fopen("table.txt", "wb");
     int insize = 0;
     while (EOF != (ch = fgetc(input)))
     {
         table[ch] += 1;
         insize++;
-        fputc(ch, tempFile);
     }
-    fclose(tempFile);
+    fseek(input, 3, SEEK_SET);
 
     HuffmanTree* tree = makeTree(table, 256);
     getCodes(tree, codes, 256);
     free(table);
 
-    tempFile = fopen("tmp.txt", "rb");
     encodeTree(tree, output);
 
     int chToWrite = 0; //символ, который будет записан, когда он будет готов
     int chSize = 0; //размер chToWrite в битах
-    while (EOF != (ch = fgetc(tempFile)))
+    while (EOF != (ch = fgetc(input)))
     {
         HuffmanCode* chCode = codes + ch; //смещаемся по массиву на код ch
         int newChSize = chSize + chCode->length; //вычисляем новый размер символа для записи
@@ -61,11 +56,7 @@ void compress(FILE* input, FILE* output)
             chSize = offset;
 
             //запись оставшегося кусочка
-            int offsetPart = 0;
-            for (int i = 0; i < offset; ++i) {
-                offsetPart <<= 1;
-                offsetPart |= 1;
-            }
+            int offsetPart = 0xFF >> (8 - offset);
             chToWrite = chCode->code & offsetPart;
         }
     }
@@ -78,7 +69,6 @@ void compress(FILE* input, FILE* output)
     {
         fputc(8, output);
     }
-    fclose(tempFile);
     destroyTree(tree);
     free(codes);
 }
