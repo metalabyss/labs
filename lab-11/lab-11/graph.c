@@ -73,7 +73,7 @@ void insert(Graph** graph, int v, int w, int vertices)
         else
         {
             GraphEdge* edge = wNode->incoming;
-            while (edge/*->next*/)
+            while (edge->next)
             {
                 edge = edge->next;
             }
