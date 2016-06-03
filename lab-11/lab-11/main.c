@@ -2,39 +2,20 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "graph.h"
-#include "stack.h"
 
 //топологическая сортировка графа
-//TODO: храни цвета вершин как-нибудь по другому, раз такая тупая
-
-void topologicalSort(GraphVertex* graph, int vertices)
-{
-    Stack* stack = NULL;
-    int cycleFlag;
-    for (int i = 0; i < vertices; i++)
-    {
-        if (cycleFlag = dfs(&graph, i, &stack, vertices))
-        {
-            printf("impossible to sort");
-            return;
-        }
-    }
-
-    int number;
-    while (stack)
-    {
-        number = pop(&stack);
-        printf("%d ", number);
-    }
-}
 
 int main()
 {
     //инициализация
     int vertices, edges;
-    scanf("%d\n", &vertices);
-    scanf("%d\n", &edges);
-    GraphVertex* graph = NULL;
+    Graph* graph = NULL;
+
+    if (scanf("%d", &vertices) == EOF)
+    {
+        printf("bad number of lines");
+        return;
+    }
 
     if (vertices < 0 || vertices > 1000)
     {
@@ -42,7 +23,13 @@ int main()
         return;
     }
 
-    if (edges < 0 || edges > vertices*(vertices - 1) / 2)
+    if (scanf("%d", &edges) == EOF)
+    {
+        printf("bad number of lines");
+        return;
+    }
+
+    if (edges < 0 || (edges > vertices*(vertices + 1) / 2))
     {
         printf("bad number of edges");
         return;
@@ -50,6 +37,7 @@ int main()
 
     int i;
     int v, w; //2 вершинки
+
     for (i = 0; i < edges; i++)
     {
         if (scanf("%d %d", &v, &w) == EOF)
@@ -69,7 +57,7 @@ int main()
         }
     }
 
-    topologicalSort(graph, vertices);
+    topologicalSorting(graph, vertices);
 
     return 0;
 }
