@@ -9,21 +9,19 @@ struct _graphEdge;
 struct _graphNode
 {
     int number;
-    //int indeg; //степнь захода вершины
-    struct _graphEdge* incoming; //указатель на список входящих рёбер
+    struct _graphEdge* incoming; //СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃРїРёСЃРѕРє РІС…РѕРґСЏС‰РёС… СЂС‘Р±РµСЂ
 };
 
 struct _graphEdge
 {
-    struct _graphNode* from; //указатель на начало ребра
-    struct _graphNode* to; //на конец ребра
-    struct _graphEdge* next; //указатель на следующий элемент списка
+    struct _graphNode* from; //СѓРєР°Р·Р°С‚РµР»СЊ РЅР° РЅР°С‡Р°Р»Рѕ СЂРµР±СЂР°
+    struct _graphNode* to; //РЅР° РєРѕРЅРµС† СЂРµР±СЂР°
+    struct _graphEdge* next; //СѓРєР°Р·Р°С‚РµР»СЊ РЅР° СЃР»РµРґСѓСЋС‰РёР№ СЌР»РµРјРµРЅС‚ СЃРїРёСЃРєР°
 };
 
 struct _graph
 {
-    //int* colors; //массив цветов
-    struct _graphNode* vertices; //массив вершин
+    struct _graphNode* vertices; //РјР°СЃСЃРёРІ РІРµСЂС€РёРЅ
 };
 
 void insert(Graph** graph, int v, int w, int vertices)
@@ -42,23 +40,23 @@ void insert(Graph** graph, int v, int w, int vertices)
     }
 
     Graph* graphPtr = *graph;
-    GraphNode* vNode = (graphPtr->vertices) + v - 1; //не вылазим за границы массива
+    GraphNode* vNode = (graphPtr->vertices) + v - 1; //РЅРµ РІС‹Р»Р°Р·РёРј Р·Р° РіСЂР°РЅРёС†С‹ РјР°СЃСЃРёРІР°
     GraphNode* wNode = (graphPtr->vertices) + w - 1;
 
-    //инициализация начала ребра
+    //РёРЅРёС†РёР°Р»РёР·Р°С†РёСЏ РЅР°С‡Р°Р»Р° СЂРµР±СЂР°
     if (!(vNode->number))
     {
         vNode->number = v;
         vNode->incoming = NULL;
     }
 
-    //нового ребра
+    //РЅРѕРІРѕРіРѕ СЂРµР±СЂР°
     GraphEdge* newEdge = (GraphEdge*)malloc(sizeof(GraphEdge));
     newEdge->from = vNode;
     newEdge->to = wNode;
     newEdge->next = NULL;
 
-    //и его конца
+    //Рё РµРіРѕ РєРѕРЅС†Р°
     if (!(wNode)->number)
     {
         wNode->number = w;
@@ -96,8 +94,8 @@ int _countOfIncomingEdges(GraphEdge* head)
 
 void topologicalSorting(Graph* graph, int vertices)
 {
-    //идея: находим вершины, в которые ничего не входит
-    //условие цикла: нет вершин, в которые ничего не входит
+    //РёРґРµСЏ: РЅР°С…РѕРґРёРј РІРµСЂС€РёРЅС‹, РІ РєРѕС‚РѕСЂС‹Рµ РЅРёС‡РµРіРѕ РЅРµ РІС…РѕРґРёС‚
+    //СѓСЃР»РѕРІРёРµ С†РёРєР»Р°: РЅРµС‚ РІРµСЂС€РёРЅ, РІ РєРѕС‚РѕСЂС‹Рµ РЅРёС‡РµРіРѕ РЅРµ РІС…РѕРґРёС‚
     int* graphColor = (int*)malloc(vertices*sizeof(int));
     int* indeg = (int*)malloc(vertices*sizeof(int));
     Queue* queue = NULL;
@@ -112,13 +110,13 @@ void topologicalSorting(Graph* graph, int vertices)
     for (i = 0; i < vertices; i++)
     {
         GraphNode* node = (graph->vertices) + i;
-        //если в ноду ничего не входит и она не обработана, запускаем обход для неё
+        //РµСЃР»Рё РІ РЅРѕРґСѓ РЅРёС‡РµРіРѕ РЅРµ РІС…РѕРґРёС‚ Рё РѕРЅР° РЅРµ РѕР±СЂР°Р±РѕС‚Р°РЅР°, Р·Р°РїСѓСЃРєР°РµРј РѕР±С…РѕРґ РґР»СЏ РЅРµС‘
         if (!indeg[i])
         {
             pushTail(&queue, node->number);
             graphColor[i] = BLACK;
             countOfRoots--;
-            //ищем ноды, в которые идут ребра от этой вершины. избавляемся от ребер и продолжаем поиск для этих вершин
+            //РёС‰РµРј РЅРѕРґС‹, РІ РєРѕС‚РѕСЂС‹Рµ РёРґСѓС‚ СЂРµР±СЂР° РѕС‚ СЌС‚РѕР№ РІРµСЂС€РёРЅС‹. РёР·Р±Р°РІР»СЏРµРјСЃСЏ РѕС‚ СЂРµР±РµСЂ Рё РїСЂРѕРґРѕР»Р¶Р°РµРј РїРѕРёСЃРє РґР»СЏ СЌС‚РёС… РІРµСЂС€РёРЅ
             for (int j = 0; j < vertices; j++)
             {
                 if (graphColor[j] == BLACK) continue;
