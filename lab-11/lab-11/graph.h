@@ -10,6 +10,7 @@ typedef struct _graphNode GraphNode;
 typedef struct _graphEdge GraphEdge;
 typedef struct _graph Graph;
 
+Graph* create(int);
 void insert(Graph**, int, int, int);
 Graph* deleteGraph(Graph*);
 void topologicalSorting(Graph*, int);

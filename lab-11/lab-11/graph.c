@@ -24,31 +24,27 @@ struct _graph
     struct _graphNode* vertices; //массив вершин
 };
 
+
+//процедура создания графа без ребер
+Graph* create(int vertices)
+{
+    Graph* graph = (Graph*)malloc(vertices*sizeof(Graph));
+    graph->vertices = (GraphNode*)malloc(vertices*sizeof(GraphNode));
+
+    int i;
+    for (i = 0; i < vertices; i++)
+    {
+        (graph->vertices)[i].number = i + 1;
+        (graph->vertices)[i].incoming = NULL;
+    }
+    return graph;
+}
+
 void insert(Graph** graph, int v, int w, int vertices)
 {
-    if (!(*graph))
-    {
-        *graph = (Graph*)malloc(vertices*sizeof(Graph));
-        (*graph)->vertices = (GraphNode*)malloc(vertices*sizeof(GraphNode));
-
-        int i;
-        for (i = 0; i < vertices; i++)
-        {
-            ((*graph)->vertices)[i].number = 0;
-        }
-
-    }
-
     Graph* graphPtr = *graph;
     GraphNode* vNode = (graphPtr->vertices) + v - 1; //не вылазим за границы массива
     GraphNode* wNode = (graphPtr->vertices) + w - 1;
-
-    //инициализация начала ребра
-    if (!(vNode->number))
-    {
-        vNode->number = v;
-        vNode->incoming = NULL;
-    }
 
     //нового ребра
     GraphEdge* newEdge = (GraphEdge*)malloc(sizeof(GraphEdge));
@@ -56,27 +52,18 @@ void insert(Graph** graph, int v, int w, int vertices)
     newEdge->to = wNode;
     newEdge->next = NULL;
 
-    //и его конца
-    if (!(wNode)->number)
+    if (!wNode->incoming)
     {
-        wNode->number = w;
         wNode->incoming = newEdge;
     }
     else
     {
-        if (!wNode->incoming)
+        GraphEdge* edge = wNode->incoming;
+        while (edge->next)
         {
-            wNode->incoming = newEdge;
+            edge = edge->next;
         }
-        else
-        {
-            GraphEdge* edge = wNode->incoming;
-            while (edge->next)
-            {
-                edge = edge->next;
-            }
-            edge->next = newEdge;
-        }
+        edge->next = newEdge;
     }
 }
 
@@ -92,58 +79,71 @@ int _countOfIncomingEdges(GraphEdge* head)
     return count;
 }
 
+int countOfRoots(int* indeg, int* graphColor, int vertices, int unvisitedVertices)
+{
+    int count = unvisitedVertices; //количество вершин с ненулевой степенью захода среди непосещенных
+    for (int i = 0; i < vertices; i++)
+    {
+        if (indeg[i] && (graphColor[i] != BLACK)) count--;
+    }
+    return count;
+}
+
 void topologicalSorting(Graph* graph, int vertices)
 {
     //идея: находим вершины, в которые ничего не входит
     //условие цикла: нет вершин, в которые ничего не входит
     int* graphColor = (int*)malloc(vertices*sizeof(int));
-    int* indeg = (int*)malloc(vertices*sizeof(int));
+    int* indeg = (int*)malloc(vertices*sizeof(int)); //массив, в котором содержатся степени захода для каждой вершины
     Queue* queue = NULL;
-    int i;   
+    int i;
     for (i = 0; i < vertices; i++)
     {
         graphColor[i] = WHITE;
         indeg[i] = _countOfIncomingEdges(((graph->vertices) + i)->incoming);
     }
 
-    int countOfRoots = vertices;
-    for (i = 0; i < vertices; i++)
+    int unvisitedVertices = vertices;
+    int isNotComplete;
+    do
     {
-        GraphNode* node = (graph->vertices) + i;
-        //если в ноду ничего не входит и она не обработана, запускаем обход для неё
-        if (!indeg[i])
+        if (!countOfRoots(indeg, graphColor, vertices, unvisitedVertices)) {
+            printf("impossible to sort");
+            return;
+        }
+
+        for (i = 0; i < vertices; i++)
         {
-            pushTail(&queue, node->number);
-            graphColor[i] = BLACK;
-            countOfRoots--;
-            //ищем ноды, в которые идут ребра от этой вершины. избавляемся от ребер и продолжаем поиск для этих вершин
-            for (int j = 0; j < vertices; j++)
+            GraphNode* node = (graph->vertices) + i;
+            //если в ноду ничего не входит и она не обработана, запускаем обход для неё
+            if (!indeg[i] && (graphColor[i] != BLACK))
             {
-                if (graphColor[j] == BLACK) continue;
+                pushTail(&queue, node->number);
+                graphColor[i] = BLACK;
+                unvisitedVertices--;
                 
-                GraphNode* currentNode = (graph->vertices) + j;
-                GraphEdge* currentEdge = currentNode->incoming;
-                while (currentEdge)
+                //ищем ноды, в которые идут ребра от этой вершины, удаляем
+                for (int j = 0; j < vertices; j++)
                 {
-                    if (currentEdge->from == node) indeg[j]--;
-                    currentEdge = currentEdge->next;
+                    if (graphColor[j] == BLACK || !indeg[j]) continue;
+
+                    GraphNode* currentNode = (graph->vertices) + j;
+                    GraphEdge* currentEdge = currentNode->incoming;
+                    while (currentEdge)
+                    {
+                        if (currentEdge->from == node) indeg[j]--;
+                        currentEdge = currentEdge->next;
+                    }
                 }
             }
         }
-    }
+        isNotComplete = countOfRoots(indeg, graphColor, vertices, unvisitedVertices);
+    } while (isNotComplete);
 
-    if (countOfRoots)
+    int number;
+    while (queue)
     {
-        while (queue) popHead(&queue);
-        printf("impossible to sort");
-    }
-    else
-    {
-        int number;
-        while (queue)
-        {
-            number = popHead(&queue);
-            printf("%d ", number);
-        }
+        number = popHead(&queue);
+        printf("%d ", number);
     }
 }

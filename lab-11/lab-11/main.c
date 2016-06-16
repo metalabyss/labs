@@ -7,9 +7,7 @@
 
 int main()
 {
-    //инициализация
     int vertices, edges;
-    Graph* graph = NULL;
 
     if (scanf("%d", &vertices) == EOF)
     {
@@ -37,6 +35,7 @@ int main()
 
     int i;
     int v, w;
+    Graph* graph = create(vertices);
 
     for (i = 0; i < edges; i++)
     {
