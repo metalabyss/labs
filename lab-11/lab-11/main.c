@@ -4,6 +4,7 @@
 #include "graph.h"
 
 //топологическая сортировка графа
+//TODO: освободить память, переделать эффективнее
 
 int main()
 {
@@ -48,6 +49,11 @@ int main()
         if (v < 0 || v > 1000 || w < 0 || w > 1000 || v > vertices || w > vertices)
         {
             printf("bad vertex");
+            return;
+        }
+        else if (v == w)
+        {
+            printf("impossible to sort");
             return;
         }
         else

@@ -79,12 +79,14 @@ int _countOfIncomingEdges(GraphEdge* head)
     return count;
 }
 
+//функция для проверки на цикл
+//условие цикла: нет вершин, в которые ничего не входит
 int countOfRoots(int* indeg, int* graphColor, int vertices, int unvisitedVertices)
 {
     int count = unvisitedVertices; //количество вершин с ненулевой степенью захода среди непосещенных
     for (int i = 0; i < vertices; i++)
     {
-        if (indeg[i] && (graphColor[i] != BLACK)) count--;
+        if (indeg[i] && (graphColor[i] == UNVISITED)) count--;
     }
     return count;
 }
@@ -92,19 +94,18 @@ int countOfRoots(int* indeg, int* graphColor, int vertices, int unvisitedVertice
 void topologicalSorting(Graph* graph, int vertices)
 {
     //идея: находим вершины, в которые ничего не входит
-    //условие цикла: нет вершин, в которые ничего не входит
+    
     int* graphColor = (int*)malloc(vertices*sizeof(int));
     int* indeg = (int*)malloc(vertices*sizeof(int)); //массив, в котором содержатся степени захода для каждой вершины
     Queue* queue = NULL;
     int i;
     for (i = 0; i < vertices; i++)
     {
-        graphColor[i] = WHITE;
+        graphColor[i] = UNVISITED;
         indeg[i] = _countOfIncomingEdges(((graph->vertices) + i)->incoming);
     }
 
     int unvisitedVertices = vertices;
-    int isNotComplete;
     do
     {
         if (!countOfRoots(indeg, graphColor, vertices, unvisitedVertices)) {
@@ -116,16 +117,16 @@ void topologicalSorting(Graph* graph, int vertices)
         {
             GraphNode* node = (graph->vertices) + i;
             //если в ноду ничего не входит и она не обработана, запускаем обход для неё
-            if (!indeg[i] && (graphColor[i] != BLACK))
+            if (!indeg[i] && (graphColor[i] != VISITED))
             {
                 pushTail(&queue, node->number);
-                graphColor[i] = BLACK;
+                graphColor[i] = VISITED;
                 unvisitedVertices--;
                 
                 //ищем ноды, в которые идут ребра от этой вершины, удаляем
                 for (int j = 0; j < vertices; j++)
                 {
-                    if (graphColor[j] == BLACK || !indeg[j]) continue;
+                    if (graphColor[j] == VISITED || !indeg[j]) continue;
 
                     GraphNode* currentNode = (graph->vertices) + j;
                     GraphEdge* currentEdge = currentNode->incoming;
@@ -137,8 +138,7 @@ void topologicalSorting(Graph* graph, int vertices)
                 }
             }
         }
-        isNotComplete = countOfRoots(indeg, graphColor, vertices, unvisitedVertices);
-    } while (isNotComplete);
+    } while (unvisitedVertices);
 
     int number;
     while (queue)

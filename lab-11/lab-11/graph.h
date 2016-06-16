@@ -2,9 +2,8 @@
 
 #define H_GRAPH
 
-#define WHITE (0)
-#define GREY (1)
-#define BLACK (-1)
+#define UNVISITED (0)
+#define VISITED (1)
 
 typedef struct _graphNode GraphNode;
 typedef struct _graphEdge GraphEdge;
